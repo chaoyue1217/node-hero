@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Hero - Admin</title>
+  <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
+  <style>
+    .hero-list img {
+      width: 50px;
+    }
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="page-header container">
+      <h1><a href="/">王者荣耀</a> <small>英雄管理器</small></h1>
+    </div>
+  </header>
+  <div class="container hero-list">
+    <a class="btn btn-success pull-right" href="/add">添加英雄</a>
+    <table class="table table-hover">
+      <thead>
+        <th>编号</th>
+        <th>名称</th>
+        <th>性别</th>
+        <th>头像</th>
+        <th>操作</th>
+      </thead>
+      <tbody id="tbody">
+      </tbody>
+    </table>
+  </div>
+  <script src="/node_modules/jquery/dist/jquery.js"></script>
+  <script src="/node_modules/bootstrap/dist/js/bootstrap.js"></script>
+  <script src="/node_modules/art-template/dist/template-native.js"></script>
+  <script type="text/template" id="tpl">
+    <% heros.forEach(function (hero) { %>
+      <tr>
+        <td>
+          <%= hero.id %>
+        </td>
+        <td>
+          <%= hero.name %>
+        </td>
+        <td>
+          <%= hero.gender %>
+        </td>
+        <td><img src="<%= hero.avatar %>" alt=""></td>
+        <td>
+          <a href="/info?id=<%= hero.id %>">查看</a>
+          <a href="/edit?id=<%= hero.id %>">编辑</a>
+          <a class="remove" href="/remove?id=<%= hero.id %>">删除</a>
+        </td>
+      </tr>
+    <% }) %>
+  </script>
+  <script>
+    // 这回改成了客户端渲染，一上来页面内容是空的
+    // 但是当执行到当前脚本的时候，调用 loadData 会去异步加载数据，然后客户端渲染模板
+    loadData()
+
+    function loadData() {
+      $.ajax({
+        url: '/heros',
+        type: 'get',
+        dataType: 'json',
+        success: function (data) {
+          var html = template('tpl', data.result)
+          console.log(html)
+          $('#tbody').html(html)
+        }
+      })
+    }
+
+    function remove(e) {
+      e.preventDefault()
+      if (window.confirm('are you ok？')) {
+        $.ajax({
+          url: $(this).attr('href'),
+          type: 'get',
+          dataType: 'json',
+          success: function (data) {
+            if (data.err_code === 0) {
+              // 让当前页重新刷新，这样页面重新渲染，你删除的那个数据就不存在了
+              // window.location.reload()
+              // 删除成功，发起请求，请求数据，拿到数据，客户端模板引擎渲染
+              // 也就是重载当前页面数据
+              loadData()
+            }
+          }
+        })
+      }
+    }
+
+    $('body').on('click', '.remove', remove)
+
+  </script>
+</body>
+
+</html>
+
